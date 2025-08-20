@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💸 Planner Carvalhos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+        .glass-effect { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.9); }
+        .hover-lift { transition: transform 0.2s ease; }
+        .hover-lift:hover { transform: translateY(-2px); }
+        .editable { cursor: pointer; border: 2px dashed transparent; padding: 2px 4px; border-radius: 4px; }
+        .editable:hover { border-color: #6366f1; background: #f8fafc; }
+        
+        @keyframes confetti {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #f39c12;
+            animation: confetti 3s linear infinite;
+        }
+        
+        .confetti:nth-child(1) { left: 10%; animation-delay: 0s; background: #e74c3c; }
+        .confetti:nth-child(2) { left: 20%; animation-delay: 0.5s; background: #3498db; }
+        .confetti:nth-child(3) { left: 30%; animation-delay: 1s; background: #2ecc71; }
+        .confetti:nth-child(4) { left: 40%; animation-delay: 1.5s; background: #f39c12; }
+        .confetti:nth-child(5) { left: 50%; animation-delay: 2s; background: #9b59b6; }
+        .confetti:nth-child(6) { left: 60%; animation-delay: 0.3s; background: #e67e22; }
+        .confetti:nth-child(7) { left: 70%; animation-delay: 0.8s; background: #1abc9c; }
+        .confetti:nth-child(8) { left: 80%; animation-delay: 1.3s; background: #34495e; }
+        .confetti:nth-child(9) { left: 90%; animation-delay: 1.8s; background: #e91e63; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-white to-cyan-50 min-h-screen">
+    
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-semibold text-gray-800">📅 Planner Carvalhos</h1>
+            
+            <!-- Navegador de Mês/Ano -->
+            <div class="flex items-center space-x-4">
+                <button onclick="mudarMes(-1)" class="p-2 hover:bg-gray-100 rounded-lg">
+                    <span class="text-xl">←</span>
+                </button>
+                <div class="text-center">
+                    <div class="font-semibold text-gray-800" id="mesAtual">Dezembro 2024</div>
+                    <div class="text-xs text-gray-500">Clique nas setas para navegar</div>
+                </div>
+                <button onclick="mudarMes(1)" class="p-2 hover:bg-gray-100 rounded-lg">
+                    <span class="text-xl">→</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Login -->
+    <div id="loginScreen" class="fixed inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="text-4xl mb-4">🔒</div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Planner Carvalhos</h2>
+                <p class="text-gray-600">Digite a senha para acessar</p>
+            </div>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <input type="password" id="senhaInput" class="w-full border border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-center text-lg" placeholder="••••" maxlength="4">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-4 rounded-lg font-medium transition-colors">
+                    Entrar
+                </button>
+                <div id="erroSenha" class="text-red-500 text-sm text-center hidden">Senha incorreta!</div>
+            </form>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 py-6">
+        
+        <!-- Resumo Principal -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white rounded-2xl p-6 shadow-sm hover-lift">
+                <div class="text-sm text-gray-500 mb-1">Saldo Atual</div>
+                <div class="text-2xl font-bold text-gray-800 editable" id="saldoAtual" onclick="editarSaldo()">R$ 3.250</div>
+                <div class="text-xs text-gray-500 mt-1">Clique para editar</div>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-6 shadow-sm hover-lift">
+                <div class="text-sm text-gray-500 mb-1">A Receber</div>
+                <div class="text-2xl font-bold text-orange-500" id="aReceber">R$ 350</div>
+                <div class="text-xs text-orange-600 mt-1" id="qtdPendencias">2 pendências</div>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-6 shadow-sm hover-lift">
+                <div class="text-sm text-gray-500 mb-1">Gastos do Mês</div>
+                <div class="text-2xl font-bold" id="gastosMes">R$ 4.750</div>
+                <div class="text-xs text-gray-500 mt-1">
+                    <span class="cursor-pointer hover:text-purple-600" onclick="mostrarParcelamentos()">Ver parcelamentos</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área Principal -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Coluna Esquerda - Lançamentos -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-2xl shadow-sm">
+                    <div class="p-6 border-b border-gray-100">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-lg font-semibold text-gray-800">Últimos Lançamentos</h2>
+                            <button onclick="toggleForm()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors">
+                                + Adicionar Gasto
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Formulário -->
+                    <div id="formContainer" class="hidden border-b border-gray-100 p-6 bg-gray-50">
+                        <form id="gastoForm" class="space-y-4">
+                            <!-- Primeira linha: Descrição e Quem fez -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Descrição do Gasto</label>
+                                    <select id="descricao" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                        <option value="">Selecione...</option>
+                                        <option value="Cartão MAIS">💳 Cartão MAIS</option>
+                                        <option value="Cartão Inter">💳 Cartão Inter</option>
+                                        <option value="Cartão Nubank">💳 Cartão Nubank</option>
+                                        <option value="outros">📝 Outros</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Quem fez? (opcional)</label>
+                                    <input type="text" id="responsavel" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Deixe vazio se for de vocês">
+                                </div>
+                            </div>
+                            
+                            <div id="outroTipo" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Especificar</label>
+                                <input type="text" id="outroTipoTexto" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Digite o tipo de gasto">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Observações (opcional)</label>
+                                <input type="text" id="observacoes" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Ex: Churrasco, Supermercado, etc.">
+                            </div>
+                            
+                            <!-- Segunda linha: Valor e checkboxes -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Valor</label>
+                                    <input type="number" id="valor" step="0.01" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="0,00">
+                                </div>
+                                
+                                <div class="flex items-center space-x-3">
+                                    <input type="checkbox" id="parcelado" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                    <label for="parcelado" class="text-sm font-medium text-gray-700">É parcelado?</label>
+                                </div>
+                                
+                                <div class="flex items-center space-x-3">
+                                    <input type="checkbox" id="fixo" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                    <label for="fixo" class="text-sm font-medium text-gray-700">É despesa fixa?</label>
+                                </div>
+                            </div>
+                            
+                            <div id="parcelasContainer" class="hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Quantas parcelas?</label>
+                                <input type="number" id="parcelas" min="2" max="24" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-gray-400" placeholder="Ex: 3">
+                            </div>
+                            
+                            <div class="flex gap-3 pt-4">
+                                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                                    Salvar Gasto
+                                </button>
+                                <button type="button" onclick="toggleForm()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-medium transition-colors">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Lista de Lançamentos -->
+                    <div class="p-6">
+                        <div id="listaLancamentos" class="space-y-3">
+                            <!-- Lançamentos serão inseridos aqui -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna Direita - Pendências e Resumo -->
+            <div class="space-y-6">
+                
+                <!-- Pendências -->
+                <div class="bg-white rounded-2xl shadow-sm">
+                    <div class="p-6 border-b border-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-800">Valores a Receber</h3>
+                    </div>
+                    <div class="p-6">
+                        <div id="listaPendencias" class="space-y-3">
+                            <!-- Pendências serão inseridas aqui -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumo Rápido -->
+                <div class="bg-white rounded-2xl shadow-sm">
+                    <div class="p-6 border-b border-gray-100">
+                        <h3 class="text-lg font-semibold text-gray-800">Resumo</h3>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Total Receitas</span>
+                            <span class="font-semibold text-green-600" id="totalReceitas">R$ 8.000</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Total Despesas</span>
+                            <span class="font-semibold text-red-500" id="totalDespesas">R$ 4.750</span>
+                        </div>
+                        <hr class="border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-gray-800">Saldo Final</span>
+                            <span class="font-bold text-xl text-indigo-600" id="saldoFinal">R$ 3.250</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Saldo -->
+    <div id="saldoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Editar Receitas</h3>
+            <form id="saldoForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Salário Suellen</label>
+                    <input type="number" id="salarioSuellen" step="0.01" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="0,00">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Salário Leonardo</label>
+                    <input type="number" id="salarioLeonardo" step="0.01" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="0,00">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Outras Receitas</label>
+                    <input type="number" id="outrasReceitas" step="0.01" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 mb-2" placeholder="0,00">
+                    <input type="text" id="tipoReceita" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Tipo da receita (ex: Freelance, Venda, etc.)">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="fecharSaldoModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg font-medium transition-colors">
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Parcelamentos -->
+    <div id="parcelamentosModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-96 overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Parcelamentos Ativos</h3>
+                <button onclick="fecharParcelamentosModal()" class="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            <div id="listaParcelamentos" class="space-y-3">
+                <!-- Parcelamentos serão inseridos aqui -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Gasto -->
+    <div id="editarGastoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Editar Gasto</h3>
+            <form id="editarGastoForm" class="space-y-4">
+                <input type="hidden" id="editarGastoId">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                    <input type="text" id="editarDescricao" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Valor</label>
+                    <input type="number" id="editarValor" step="0.01" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Observações</label>
+                    <input type="text" id="editarObservacoes" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Quem fez?</label>
+                    <input type="text" id="editarResponsavel" class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="fecharEditarGastoModal()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg font-medium transition-colors">
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Celebração -->
+    <div id="celebracaoModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-gradient-to-br from-yellow-400 via-pink-500 to-purple-600 rounded-xl p-8 w-full max-w-md mx-4 text-center transform transition-all duration-300 ease-out">
+            <div class="text-6xl mb-4" id="celebracaoEmoji">🎉</div>
+            <h3 class="text-2xl font-bold text-white mb-4" id="celebracaoTitulo">Parabéns!</h3>
+            <p class="text-white text-lg" id="celebracaoMensagem">Você quitou um parcelamento!</p>
+        </div>
+    </div>
+
+    <script>
+        // Dados globais
+        let mesAtual = 7; // Agosto (0-11)
+        let anoAtual = 2025;
+        let dadosMensais = {}; // Estrutura: {ano: {mes: {gastos: [], receitas: {}}}}
+        let parcelamentosAtivos = [];
+        let loggedIn = false;
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar se já está logado
+            const senhaCorreta = localStorage.getItem('plannerAuth');
+            if (senhaCorreta === '6630') {
+                loggedIn = true;
+                document.getElementById('loginScreen').style.display = 'none';
+            }
+            
+            // Carregar dados do localStorage
+            carregarDados();
+            
+            // Verificar se deve ir para o próximo mês
+            verificarMudancaMes();
+            
+            inicializarDados();
+            atualizarInterface();
+            
+            // Event listeners
+            document.getElementById('descricao').addEventListener('change', function() {
+                const outroDiv = document.getElementById('outroTipo');
+                const observacoesDiv = document.getElementById('observacoes').parentElement;
+                if (this.value === 'outros') {
+                    outroDiv.classList.remove('hidden');
+                    observacoesDiv.classList.add('hidden');
+                } else {
+                    outroDiv.classList.add('hidden');
+                    observacoesDiv.classList.remove('hidden');
+                }
+            });
+
+            document.getElementById('parcelado').addEventListener('change', function() {
+                const parcelasDiv = document.getElementById('parcelasContainer');
+                if (this.checked) {
+                    parcelasDiv.classList.remove('hidden');
+                } else {
+                    parcelasDiv.classList.add('hidden');
+                }
+            });
+
+            document.getElementById('gastoForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                adicionarGasto();
+            });
+
+            document.getElementById('saldoForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                salvarReceitas();
+            });
+
+            document.getElementById('editarGastoForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                salvarEdicaoGasto();
+            });
+
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                verificarSenha();
+            });
+        });
+
+        // Verificar senha
+        function verificarSenha() {
+            const senha = document.getElementById('senhaInput').value;
+            const erroDiv = document.getElementById('erroSenha');
+            
+            if (senha === '6630') {
+                localStorage.setItem('plannerAuth', '6630');
+                loggedIn = true;
+                document.getElementById('loginScreen').style.display = 'none';
+                erroDiv.classList.add('hidden');
+            } else {
+                erroDiv.classList.remove('hidden');
+                document.getElementById('senhaInput').value = '';
+                setTimeout(() => erroDiv.classList.add('hidden'), 3000);
+            }
+        }
+
+        // Carregar dados do localStorage
+        function carregarDados() {
+            const dadosSalvos = localStorage.getItem('plannerDados');
+            const parcelamentosSalvos = localStorage.getItem('plannerParcelamentos');
+            const mesAnoSalvo = localStorage.getItem('plannerMesAno');
+            
+            if (dadosSalvos) {
+                dadosMensais = JSON.parse(dadosSalvos);
+            }
+            
+            if (parcelamentosSalvos) {
+                parcelamentosAtivos = JSON.parse(parcelamentosSalvos);
+            }
+            
+            if (mesAnoSalvo) {
+                const mesAno = JSON.parse(mesAnoSalvo);
+                mesAtual = mesAno.mes;
+                anoAtual = mesAno.ano;
+            }
+        }
+
+        // Salvar dados no localStorage
+        function salvarDados() {
+            localStorage.setItem('plannerDados', JSON.stringify(dadosMensais));
+            localStorage.setItem('plannerParcelamentos', JSON.stringify(parcelamentosAtivos));
+            localStorage.setItem('plannerMesAno', JSON.stringify({mes: mesAtual, ano: anoAtual}));
+        }
+
+        // Verificar se deve mudar para o próximo mês
+        function verificarMudancaMes() {
+            const hoje = new Date();
+            const mesAtualReal = hoje.getMonth();
+            const anoAtualReal = hoje.getFullYear();
+            
+            // Se estamos em um mês anterior ao atual, avançar para o mês atual
+            if (anoAtualReal > anoAtual || (anoAtualReal === anoAtual && mesAtualReal > mesAtual)) {
+                // Mas não ir antes de agosto/2025
+                if (anoAtualReal >= 2025 && (anoAtualReal > 2025 || mesAtualReal >= 7)) {
+                    mesAtual = mesAtualReal;
+                    anoAtual = anoAtualReal;
+                    salvarDados();
+                }
+            }
+        }
+
+        // Inicializar dados
+        function inicializarDados() {
+            // Limpar dados antigos (antes de agosto/2025)
+            for (let ano in dadosMensais) {
+                if (parseInt(ano) < 2025) {
+                    delete dadosMensais[ano];
+                } else if (parseInt(ano) === 2025) {
+                    for (let mes in dadosMensais[ano]) {
+                        if (parseInt(mes) < 7) { // Agosto = 7 (0-11)
+                            delete dadosMensais[ano][mes];
+                        }
+                    }
+                }
+            }
+            
+            // Redirecionar para agosto/2025 se estiver em data anterior
+            if (anoAtual < 2025 || (anoAtual === 2025 && mesAtual < 7)) {
+                anoAtual = 2025;
+                mesAtual = 7; // Agosto
+            }
+            
+            if (!dadosMensais[anoAtual]) dadosMensais[anoAtual] = {};
+            if (!dadosMensais[anoAtual][mesAtual]) {
+                dadosMensais[anoAtual][mesAtual] = {
+                    gastos: [],
+                    receitas: {
+                        salarioSuellen: 0,
+                        salarioLeonardo: 0,
+                        outrasReceitas: 0,
+                        tiposReceitas: []
+                    }
+                };
+            }
+        }
+
+        // Navegação de mês
+        function mudarMes(direcao) {
+            mesAtual += direcao;
+            if (mesAtual > 11) {
+                mesAtual = 0;
+                anoAtual++;
+            } else if (mesAtual < 0) {
+                mesAtual = 11;
+                anoAtual--;
+            }
+            
+            // Não permitir navegar para antes de agosto/2025
+            if (anoAtual < 2025 || (anoAtual === 2025 && mesAtual < 7)) {
+                anoAtual = 2025;
+                mesAtual = 7; // Agosto
+            }
+            
+            inicializarDados();
+            atualizarInterface();
+            salvarDados();
+        }
+
+        // Atualizar interface
+        function atualizarInterface() {
+            const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                          'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            
+            document.getElementById('mesAtual').textContent = `${meses[mesAtual]} ${anoAtual}`;
+            
+            // Verificar se há última parcela neste mês
+            verificarUltimaParcela();
+            
+            renderGastos();
+            renderPendencias();
+            atualizarResumo();
+        }
+
+        // Toggle do formulário
+        function toggleForm() {
+            const form = document.getElementById('formContainer');
+            form.classList.toggle('hidden');
+            if (!form.classList.contains('hidden')) {
+                document.getElementById('descricao').focus();
+            } else {
+                document.getElementById('gastoForm').reset();
+                document.getElementById('outroTipo').classList.add('hidden');
+                document.getElementById('parcelasContainer').classList.add('hidden');
+            }
+        }
+
+        // Adicionar gasto
+        function adicionarGasto() {
+            let descricao = document.getElementById('descricao').value;
+            const valor = parseFloat(document.getElementById('valor').value);
+            const responsavel = document.getElementById('responsavel').value.trim();
+            const observacoes = document.getElementById('observacoes').value.trim();
+            const parcelado = document.getElementById('parcelado').checked;
+            const fixo = document.getElementById('fixo').checked;
+            const parcelas = parseInt(document.getElementById('parcelas').value) || 1;
+
+            if (descricao === 'outros') {
+                descricao = document.getElementById('outroTipoTexto').value;
+            }
+
+            if (!descricao || !valor) {
+                alert('Preencha todos os campos obrigatórios!');
+                return;
+            }
+
+            const novoGasto = {
+                id: Date.now(),
+                descricao: descricao,
+                valor: valor,
+                responsavel: responsavel,
+                observacoes: observacoes,
+                data: new Date().toISOString().split('T')[0],
+                parcelado: parcelado,
+                fixo: fixo,
+                parcelas: parcelas
+            };
+
+            // Adicionar ao mês atual
+            dadosMensais[anoAtual][mesAtual].gastos.unshift(novoGasto);
+
+            // Se for parcelado, adicionar às próximas parcelas
+            if (parcelado && parcelas > 1) {
+                const parcelamento = {
+                    id: Date.now(),
+                    descricao: descricao,
+                    valorTotal: valor,
+                    valorParcela: valor / parcelas,
+                    parcelasTotal: parcelas,
+                    parcelasRestantes: parcelas - 1,
+                    mesInicio: mesAtual,
+                    anoInicio: anoAtual
+                };
+                
+                parcelamentosAtivos.push(parcelamento);
+                
+                // Adicionar parcelas nos próximos meses
+                for (let i = 1; i < parcelas; i++) {
+                    let proximoMes = mesAtual + i;
+                    let proximoAno = anoAtual;
+                    
+                    while (proximoMes > 11) {
+                        proximoMes -= 12;
+                        proximoAno++;
+                    }
+                    
+                    if (!dadosMensais[proximoAno]) dadosMensais[proximoAno] = {};
+                    if (!dadosMensais[proximoAno][proximoMes]) {
+                        dadosMensais[proximoAno][proximoMes] = {
+                            gastos: [],
+                            receitas: { salarioSuellen: 0, salarioLeonardo: 0, outrasReceitas: 0, tiposReceitas: [] }
+                        };
+                    }
+                    
+                    const isUltimaParcela = i === parcelas - 1;
+                    
+                    dadosMensais[proximoAno][proximoMes].gastos.push({
+                        id: Date.now() + i,
+                        descricao: `${descricao} (${i + 1}/${parcelas})`,
+                        valor: valor / parcelas,
+                        responsavel: responsavel,
+                        observacoes: observacoes,
+                        data: `${proximoAno}-${String(proximoMes + 1).padStart(2, '0')}-01`,
+                        parcelado: true,
+                        parcelas: parcelas,
+                        parcelamentoId: parcelamento.id,
+                        ultimaParcela: isUltimaParcela
+                    });
+                }
+            }
+
+            // Se for despesa fixa, adicionar de agosto/2025 até dezembro/2030
+            if (fixo) {
+                for (let ano = 2025; ano <= 2030; ano++) {
+                    const mesInicio = 7; // Sempre começar em agosto
+                    const mesFim = 11;
+                    
+                    for (let mes = mesInicio; mes <= mesFim; mes++) {
+                        // Pular o mês atual para não duplicar
+                        if (ano === anoAtual && mes === mesAtual) continue;
+                        
+                        if (!dadosMensais[ano]) dadosMensais[ano] = {};
+                        if (!dadosMensais[ano][mes]) {
+                            dadosMensais[ano][mes] = {
+                                gastos: [],
+                                receitas: { salarioSuellen: 0, salarioLeonardo: 0, outrasReceitas: 0, tiposReceitas: [] }
+                            };
+                        }
+                        
+                        dadosMensais[ano][mes].gastos.push({
+                            id: Date.now() + ano + mes,
+                            descricao: `${descricao} (Fixa)`,
+                            valor: valor,
+                            responsavel: responsavel,
+                            observacoes: observacoes,
+                            data: `${ano}-${String(mes + 1).padStart(2, '0')}-01`,
+                            fixo: true
+                        });
+                    }
+                }
+            }
+
+            atualizarInterface();
+            toggleForm();
+            salvarDados();
+            mostrarNotificacao('Gasto adicionado!');
+        }
+
+        // Render gastos
+        function renderGastos() {
+            const container = document.getElementById('listaLancamentos');
+            container.innerHTML = '';
+
+            const gastos = dadosMensais[anoAtual][mesAtual]?.gastos || [];
+
+            gastos.slice(0, 10).forEach(gasto => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors';
+                
+                const valorFormatado = gasto.valor.toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                });
+                
+                const parceladoTexto = gasto.parcelado ? ' 📅' : '';
+                const fixoTexto = gasto.fixo ? ' 🔄' : '';
+                
+                // Extrair número da parcela se for parcelado
+                let numeroParcela = '';
+                if (gasto.parcelado && gasto.descricao.includes('(') && gasto.descricao.includes('/')) {
+                    const match = gasto.descricao.match(/\((\d+)\/(\d+)\)/);
+                    if (match) {
+                        numeroParcela = `${match[1]} de ${match[2]} - `;
+                    }
+                } else if (gasto.parcelado && gasto.parcelas > 1) {
+                    numeroParcela = `1 de ${gasto.parcelas} - `;
+                }
+                
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">💸</span>
+                        <div>
+                            <div class="font-medium text-gray-800">${gasto.descricao}${parceladoTexto}${fixoTexto}</div>
+                            ${gasto.observacoes ? `<div class="text-sm text-gray-600 mt-1">${numeroParcela}${gasto.observacoes}</div>` : ''}
+                            ${gasto.responsavel ? `<div class="text-sm text-gray-500 mt-1">${gasto.responsavel}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-semibold text-red-500">- ${valorFormatado}</div>
+                        <button onclick="editarGasto(${gasto.id})" class="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded mt-1 transition-colors">
+                            ✏️ Editar
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+
+        // Render pendências
+        function renderPendencias() {
+            const container = document.getElementById('listaPendencias');
+            container.innerHTML = '';
+
+            const gastos = dadosMensais[anoAtual][mesAtual]?.gastos || [];
+            const pendencias = gastos.filter(g => {
+                const responsavel = g.responsavel && g.responsavel.trim().toLowerCase();
+                return responsavel && responsavel !== 'suellen' && responsavel !== 'leonardo';
+            });
+
+            if (pendencias.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-4">Nenhuma pendência 🎉</div>';
+                return;
+            }
+
+            pendencias.forEach(pendencia => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg';
+                
+                div.innerHTML = `
+                    <div>
+                        <div class="font-medium text-gray-800">${pendencia.responsavel}</div>
+                        <div class="text-sm text-gray-600">${pendencia.descricao}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-semibold text-orange-600">
+                            ${pendencia.valor.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}
+                        </div>
+                        <button onclick="marcarRecebido(${pendencia.id})" class="text-xs bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded mt-1">
+                            Recebido
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+
+        // Marcar como recebido
+        function marcarRecebido(id) {
+            const gastos = dadosMensais[anoAtual][mesAtual].gastos;
+            const gasto = gastos.find(g => g.id === id);
+            
+            if (gasto) {
+                // Adicionar como receita
+                dadosMensais[anoAtual][mesAtual].receitas.outrasReceitas += gasto.valor;
+                
+                // Remover da lista de gastos
+                dadosMensais[anoAtual][mesAtual].gastos = gastos.filter(g => g.id !== id);
+                
+                atualizarInterface();
+                salvarDados();
+                mostrarNotificacao('Valor recebido!');
+            }
+        }
+
+        // Remover gasto - NOVA VERSÃO
+        function removerGasto(gastoId) {
+            // Confirmar a remoção
+            if (!confirm('Tem certeza que deseja remover este gasto?')) {
+                return;
+            }
+            
+            // Converter ID para número para garantir comparação correta
+            const idParaRemover = Number(gastoId);
+            
+            // Pegar a lista atual de gastos
+            const listaGastos = dadosMensais[anoAtual][mesAtual].gastos;
+            
+            // Encontrar o índice do gasto a ser removido
+            let indiceParaRemover = -1;
+            for (let i = 0; i < listaGastos.length; i++) {
+                if (Number(listaGastos[i].id) === idParaRemover) {
+                    indiceParaRemover = i;
+                    break;
+                }
+            }
+            
+            // Se encontrou o gasto, remover
+            if (indiceParaRemover !== -1) {
+                listaGastos.splice(indiceParaRemover, 1);
+                atualizarInterface();
+                salvarDados();
+                mostrarNotificacao('Gasto removido!');
+            } else {
+                alert('Erro: Gasto não encontrado!');
+            }
+        }
+
+        // Editar saldo
+        function editarSaldo() {
+            const receitas = dadosMensais[anoAtual][mesAtual].receitas;
+            document.getElementById('salarioSuellen').value = receitas.salarioSuellen || 0;
+            document.getElementById('salarioLeonardo').value = receitas.salarioLeonardo || 0;
+            document.getElementById('outrasReceitas').value = receitas.outrasReceitas || 0;
+            document.getElementById('tipoReceita').value = '';
+            document.getElementById('saldoModal').classList.remove('hidden');
+        }
+
+        function fecharSaldoModal() {
+            document.getElementById('saldoModal').classList.add('hidden');
+        }
+
+        function salvarReceitas() {
+            const salarioSuellen = parseFloat(document.getElementById('salarioSuellen').value) || 0;
+            const salarioLeonardo = parseFloat(document.getElementById('salarioLeonardo').value) || 0;
+            const outrasReceitas = parseFloat(document.getElementById('outrasReceitas').value) || 0;
+            const tipoReceita = document.getElementById('tipoReceita').value.trim();
+            
+            // Aplicar salários apenas do mês atual em diante
+            for (let ano = anoAtual; ano <= 2030; ano++) {
+                const mesInicio = (ano === anoAtual) ? mesAtual : 7; // Se for o ano atual, começar do mês atual
+                const mesFim = 11; // Dezembro
+                
+                for (let mes = mesInicio; mes <= mesFim; mes++) {
+                    if (!dadosMensais[ano]) dadosMensais[ano] = {};
+                    if (!dadosMensais[ano][mes]) {
+                        dadosMensais[ano][mes] = {
+                            gastos: [],
+                            receitas: { salarioSuellen: 0, salarioLeonardo: 0, outrasReceitas: 0, tiposReceitas: [] }
+                        };
+                    }
+                    
+                    // Atualizar apenas os salários, manter outras receitas do mês específico
+                    dadosMensais[ano][mes].receitas.salarioSuellen = salarioSuellen;
+                    dadosMensais[ano][mes].receitas.salarioLeonardo = salarioLeonardo;
+                    
+                    // Para o mês atual, também atualizar outras receitas
+                    if (ano === anoAtual && mes === mesAtual) {
+                        const receitasAtuais = dadosMensais[ano][mes].receitas;
+                        
+                        // Se há valor em outras receitas e tipo especificado, adicionar à lista
+                        if (outrasReceitas > 0 && tipoReceita) {
+                            if (!receitasAtuais.tiposReceitas) receitasAtuais.tiposReceitas = [];
+                            receitasAtuais.tiposReceitas.push({
+                                valor: outrasReceitas,
+                                tipo: tipoReceita,
+                                data: new Date().toISOString().split('T')[0]
+                            });
+                        }
+                        
+                        receitasAtuais.outrasReceitas = outrasReceitas;
+                    }
+                }
+            }
+            
+            atualizarInterface();
+            fecharSaldoModal();
+            salvarDados();
+            mostrarNotificacao('Receitas salvas!');
+        }
+
+        // Mostrar parcelamentos
+        function mostrarParcelamentos() {
+            const container = document.getElementById('listaParcelamentos');
+            container.innerHTML = '';
+            
+            if (parcelamentosAtivos.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-4">Nenhum parcelamento ativo</div>';
+            } else {
+                parcelamentosAtivos.forEach(parcelamento => {
+                    const div = document.createElement('div');
+                    div.className = 'p-4 bg-purple-50 border border-purple-200 rounded-lg';
+                    
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-medium text-gray-800">${parcelamento.descricao}</div>
+                                <div class="text-sm text-gray-600">
+                                    ${parcelamento.valorParcela.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})} x ${parcelamento.parcelasTotal}
+                                </div>
+                                <div class="text-xs text-purple-600 mt-1">
+                                    Restam ${parcelamento.parcelasRestantes} parcelas
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-semibold text-purple-600">
+                                    ${parcelamento.valorTotal.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(div);
+                });
+            }
+            
+            document.getElementById('parcelamentosModal').classList.remove('hidden');
+        }
+
+        function fecharParcelamentosModal() {
+            document.getElementById('parcelamentosModal').classList.add('hidden');
+        }
+
+        // Atualizar resumo
+        function atualizarResumo() {
+            const gastos = dadosMensais[anoAtual][mesAtual]?.gastos || [];
+            const receitas = dadosMensais[anoAtual][mesAtual]?.receitas || {salarioSuellen: 0, salarioLeonardo: 0, outrasReceitas: 0, tiposReceitas: []};
+            
+            const totalGastos = gastos.reduce((sum, g) => sum + g.valor, 0);
+            const totalReceitas = receitas.salarioSuellen + receitas.salarioLeonardo + receitas.outrasReceitas;
+            const saldo = totalReceitas - totalGastos;
+            
+            const gastosTerceiros = gastos.filter(g => {
+                const responsavel = g.responsavel && g.responsavel.trim().toLowerCase();
+                return responsavel && responsavel !== 'suellen' && responsavel !== 'leonardo';
+            }).reduce((sum, g) => sum + g.valor, 0);
+            
+            document.getElementById('saldoAtual').textContent = saldo.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+            const gastosMesElement = document.getElementById('gastosMes');
+            gastosMesElement.textContent = totalGastos.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+            gastosMesElement.className = totalGastos <= 300 ? 'text-2xl font-bold text-red-500' : 'text-2xl font-bold text-green-600';
+            document.getElementById('aReceber').textContent = gastosTerceiros.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+            document.getElementById('totalReceitas').textContent = totalReceitas.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+            document.getElementById('totalDespesas').textContent = totalGastos.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+            document.getElementById('saldoFinal').textContent = saldo.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+            
+            const qtdPendencias = gastos.filter(g => {
+                const responsavel = g.responsavel && g.responsavel.trim().toLowerCase();
+                return responsavel && responsavel !== 'suellen' && responsavel !== 'leonardo';
+            }).length;
+            document.getElementById('qtdPendencias').textContent = `${qtdPendencias} pendência${qtdPendencias !== 1 ? 's' : ''}`;
+        }
+
+        // Utilitários
+        function formatarData(data) {
+            return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit'
+            });
+        }
+
+        function mostrarNotificacao(mensagem) {
+            const notif = document.createElement('div');
+            notif.className = 'fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform';
+            notif.textContent = mensagem;
+            document.body.appendChild(notif);
+            
+            setTimeout(() => notif.classList.remove('translate-x-full'), 100);
+            setTimeout(() => {
+                notif.classList.add('translate-x-full');
+                setTimeout(() => notif.remove(), 300);
+            }, 2500);
+        }
+
+        // Verificar última parcela e mostrar celebração
+        function verificarUltimaParcela() {
+            const gastos = dadosMensais[anoAtual][mesAtual]?.gastos || [];
+            const ultimasParcelas = gastos.filter(g => g.ultimaParcela);
+            
+            if (ultimasParcelas.length > 0) {
+                const celebracoes = [
+                    {
+                        emoji: '🎉',
+                        titulo: 'Parabéns!',
+                        mensagem: `Você quitou ${ultimasParcelas.length} parcelamento${ultimasParcelas.length > 1 ? 's' : ''}! Mais dinheiro no bolso! 💰`
+                    },
+                    {
+                        emoji: '🥳',
+                        titulo: 'Festa!',
+                        mensagem: 'Parcelamento quitado! Agora você pode gastar com outras coisas... ou não! 😄'
+                    },
+                    {
+                        emoji: '🎊',
+                        titulo: 'Sucesso!',
+                        mensagem: 'Mais uma parcela finalizada! Você está no caminho certo para a liberdade financeira! 🚀'
+                    },
+                    {
+                        emoji: '💪',
+                        titulo: 'Mandou bem!',
+                        mensagem: 'Parcelamento concluído! Seu eu do passado agradece por ter parcelado! 😎'
+                    },
+                    {
+                        emoji: '🌟',
+                        titulo: 'Incrível!',
+                        mensagem: 'Última parcela paga! Agora é só alegria (até o próximo parcelamento)! 😂'
+                    },
+                    {
+                        emoji: '🎈',
+                        titulo: 'Uhuuul!',
+                        mensagem: 'Parcelamento finalizado! Hora de comemorar... com responsabilidade financeira! 🤓'
+                    },
+                    {
+                        emoji: '🏆',
+                        titulo: 'Campeão!',
+                        mensagem: 'Mais uma vitória contra as dívidas! Você é o mestre das finanças! 👑'
+                    },
+                    {
+                        emoji: '🎯',
+                        titulo: 'Na mosca!',
+                        mensagem: 'Parcelamento quitado! Agora sobra mais grana para as coisas importantes... tipo pizza! 🍕'
+                    },
+                    {
+                        emoji: '🚀',
+                        titulo: 'Decolou!',
+                        mensagem: 'Última parcela paga! Seu orçamento agradece e sua carteira sorri! 😊'
+                    },
+                    {
+                        emoji: '🎪',
+                        titulo: 'Show!',
+                        mensagem: 'Parcelamento finalizado! Que tal usar esse dinheiro para... outro parcelamento? Brincadeira! 😜'
+                    },
+                    {
+                        emoji: '🌈',
+                        titulo: 'Maravilha!',
+                        mensagem: 'Mais uma parcela no passado! O futuro financeiro está cada vez mais brilhante! ✨'
+                    },
+                    {
+                        emoji: '🎭',
+                        titulo: 'Espetacular!',
+                        mensagem: 'Parcelamento quitado! Agora você pode fingir que é rico... até a próxima compra! 💸'
+                    }
+                ];
+                
+                const celebracao = celebracoes[Math.floor(Math.random() * celebracoes.length)];
+                
+                setTimeout(() => {
+                    document.getElementById('celebracaoEmoji').textContent = celebracao.emoji;
+                    document.getElementById('celebracaoTitulo').textContent = celebracao.titulo;
+                    document.getElementById('celebracaoMensagem').textContent = celebracao.mensagem;
+                    document.getElementById('celebracaoModal').classList.remove('hidden');
+                    
+                    // Adicionar confetti
+                    criarConfetti();
+                    
+                    // Fechar automaticamente após 5 segundos
+                    setTimeout(() => {
+                        fecharCelebracaoModal();
+                    }, 5000);
+                }, 1000);
+            }
+        }
+
+        function fecharCelebracaoModal() {
+            document.getElementById('celebracaoModal').classList.add('hidden');
+            // Remover confetti
+            document.querySelectorAll('.confetti').forEach(c => c.remove());
+        }
+
+        function criarConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.animationDelay = Math.random() * 3 + 's';
+                confetti.style.backgroundColor = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#e67e22', '#1abc9c', '#34495e', '#e91e63'][Math.floor(Math.random() * 9)];
+                document.body.appendChild(confetti);
+                
+                // Remover após animação
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        // Editar gasto
+        function editarGasto(gastoId) {
+            const gastos = dadosMensais[anoAtual][mesAtual].gastos;
+            const gasto = gastos.find(g => g.id === gastoId);
+            
+            if (gasto) {
+                document.getElementById('editarGastoId').value = gastoId;
+                document.getElementById('editarDescricao').value = gasto.descricao;
+                document.getElementById('editarValor').value = gasto.valor;
+                document.getElementById('editarObservacoes').value = gasto.observacoes || '';
+                document.getElementById('editarResponsavel').value = gasto.responsavel || '';
+                document.getElementById('editarGastoModal').classList.remove('hidden');
+            }
+        }
+
+        function fecharEditarGastoModal() {
+            document.getElementById('editarGastoModal').classList.add('hidden');
+        }
+
+        function salvarEdicaoGasto() {
+            const gastoId = parseInt(document.getElementById('editarGastoId').value);
+            const novaDescricao = document.getElementById('editarDescricao').value;
+            const novoValor = parseFloat(document.getElementById('editarValor').value) || 0;
+            const novasObservacoes = document.getElementById('editarObservacoes').value;
+            const novoResponsavel = document.getElementById('editarResponsavel').value;
+            
+            if (!novaDescricao) {
+                alert('Preencha a descrição!');
+                return;
+            }
+            
+            const gastos = dadosMensais[anoAtual][mesAtual].gastos;
+            const gastoIndex = gastos.findIndex(g => g.id === gastoId);
+            
+            if (gastoIndex !== -1) {
+                // Se o valor for zero, remover o gasto
+                if (novoValor === 0) {
+                    gastos.splice(gastoIndex, 1);
+                    atualizarInterface();
+                    fecharEditarGastoModal();
+                    salvarDados();
+                    mostrarNotificacao('Gasto removido!');
+                    return;
+                }
+                
+                gastos[gastoIndex].descricao = novaDescricao;
+                gastos[gastoIndex].valor = novoValor;
+                gastos[gastoIndex].observacoes = novasObservacoes;
+                gastos[gastoIndex].responsavel = novoResponsavel;
+                
+                atualizarInterface();
+                fecharEditarGastoModal();
+                salvarDados();
+                mostrarNotificacao('Gasto atualizado!');
+            }
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9722d4dfe73ff502',t:'MTc1NTcwMjc3My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
